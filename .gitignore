@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+.venv-312/
+venv/
+*.so
+
+# Node
+node_modules/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# App
+uploads/
+sessions/
+*.wav
+*.mp3
+*.flac
+*.musicxml
+
+# Python type checker
+.mypy_cache/
+.ruff_cache/
+
+# Test artifacts
+.pytest_cache/
+coverage/
+htmlcov/

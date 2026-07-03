@@ -1,0 +1,11 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.12
+librosa==0.10.2
+soundfile==0.12.1
+numpy==1.26.4
+scipy==1.14.1
+music21==9.1.0
+demucs @ git+https://github.com/facebookresearch/demucs.git
+basic-pitch==0.3.0
+pydantic-settings==2.5.2
