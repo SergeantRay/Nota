@@ -1,61 +1,45 @@
-import { useEffect, useRef } from "react";
-import { getSession } from "../api/client";
 import { useSessionStore } from "../stores/sessionStore";
-import type { SessionStatus } from "../stores/sessionStore";
 
-const STAGES: SessionStatus[] = [
-  "uploaded",
-  "preprocessing",
-  "separating",
-  "detecting",
-  "postprocessing",
-  "assembling",
-  "complete",
-];
+const STAGE_LABELS: Record<string, string> = {
+  "separating:starting": "Loading model...",
+  "separating:cpu_warning": "No GPU detected — processing on CPU (this will be slower)",
+  "separating:running_demucs": "Running Demucs...",
+  "separating:running_demucs_subprocess": "Running Demucs (subprocess)...",
+  "separating:model_loaded": "Model loaded — separating stems...",
+  "separating:saving_stems": "Saving stems...",
+  "separating:collecting_output": "Collecting output...",
+  "separating:complete": "Separation complete",
+};
 
 export default function ProcessingStatus() {
-  const { sessionId, status, progress, setStatus, setError } = useSessionStore();
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { sessionId, status, progress, stage } = useSessionStore();
 
-  useEffect(() => {
-    if (!sessionId || status === "complete" || status === "error") return;
+  if (!sessionId || status === "uploaded") return null;
 
-    const poll = () => {
-      getSession(sessionId)
-        .then((data) => {
-          setStatus(data.status as SessionStatus, data.progress);
-          if (data.status === "error" && data.error) {
-            setError(data.error);
-          }
-        })
-        .catch(() => {
-          // silently retry on next poll
-        });
-    };
-
-    intervalRef.current = setInterval(poll, 2000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [sessionId, status, setStatus, setError]);
-
-  if (!sessionId) return null;
-
-  const stageIndex = STAGES.indexOf(status ?? "uploaded");
-  const displayStage = status === "complete" ? "complete" : status ?? "uploaded";
+  const displayLabel =
+    STAGE_LABELS[stage] ?? status?.replace(/^./, (c) => c.toUpperCase()) ?? "";
+  const pct = Math.round(progress * 100);
 
   return (
     <div className="rounded-lg border border-gray-800 bg-gray-900 p-4 text-sm">
       <div className="flex items-center justify-between">
-        <span className="text-gray-300 capitalize">{displayStage}</span>
-        <span className="text-gray-500">{Math.round(progress)}%</span>
+        <span className="text-gray-300">{displayLabel || "Processing..."}</span>
+        <span className="text-gray-500">{pct}%</span>
       </div>
       <div className="mt-2 h-2 w-full rounded bg-gray-800">
         <div
           className="h-2 rounded bg-blue-500 transition-all duration-500"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${pct}%` }}
         />
       </div>
+      {status === "complete" && (
+        <p className="mt-2 text-green-400">Separation complete. Ready for pitch detection.</p>
+      )}
+      {status === "error" && (
+        <p className="mt-2 text-red-400">
+          {useSessionStore.getState().error || "An error occurred during processing."}
+        </p>
+      )}
     </div>
   );
 }

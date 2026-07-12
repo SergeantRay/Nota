@@ -17,7 +17,9 @@ export interface SessionResponse {
   channels: number;
   status: string;
   progress: number;
+  stage: string;
   error: string | null;
+  stem_paths: Record<string, string> | null;
 }
 
 export class ApiError extends Error {
@@ -74,4 +76,11 @@ export function uploadAudio(file: File, onProgress?: (pct: number) => void) {
 
 export function getSession(sessionId: string) {
   return request<SessionResponse>(`/api/session/${sessionId}`);
+}
+
+export function startProcessing(sessionId: string) {
+  return request<{ session_id: string; status: string; message: string }>(
+    `/api/session/${sessionId}/process`,
+    { method: "POST" },
+  );
 }

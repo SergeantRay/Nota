@@ -1,12 +1,12 @@
 import { useCallback, useRef, useState } from "react";
-import { uploadAudio, getSession, ApiError } from "../api/client";
+import { uploadAudio, startProcessing, ApiError } from "../api/client";
 import { useSessionStore } from "../stores/sessionStore";
 
 const ALLOWED_TYPES = [".wav", ".mp3", ".flac"];
 const MAX_SIZE = 100 * 1024 * 1024; // 100 MB
 
 export default function UploadZone() {
-  const { sessionId, uploadProgress, setSession, setUploadProgress, setError } =
+  const { sessionId, uploadProgress, setSession, setUploadProgress, setError, startPolling } =
     useSessionStore();
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -35,6 +35,8 @@ export default function UploadZone() {
           durationSec: result.duration_sec,
           status: result.status as "uploaded",
         });
+        startProcessing(result.session_id);
+        startPolling();
       } catch (err) {
         const msg = err instanceof ApiError ? err.message : "Upload failed";
         setLocalError(msg);

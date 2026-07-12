@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 
 from app.config import settings
-from app.models import Session
+from app.models import Session, SessionStatus
 
 
 def session_dir(session_id: str) -> Path:
@@ -51,7 +51,9 @@ def _serialize(s: Session) -> dict:
         "channels": s.channels,
         "status": s.status.value,
         "progress": s.progress,
+        "stage": s.stage,
         "error": s.error,
+        "stem_paths": s.stem_paths,
     }
 
 
@@ -66,5 +68,7 @@ def _deserialize(d: dict) -> Session:
         channels=d.get("channels", 0),
         status=SessionStatus(d.get("status", "uploaded")),
         progress=d.get("progress", 0.0),
+        stage=d.get("stage", ""),
         error=d.get("error"),
+        stem_paths=d.get("stem_paths", {}),
     )
