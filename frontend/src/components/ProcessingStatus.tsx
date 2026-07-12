@@ -22,6 +22,10 @@ const STAGE_LABELS: Record<string, string> = {
   "postprocessing:quantized": "Quantizing notes...",
   "postprocessing:voices_separated": "Separating voices...",
   "postprocessing:complete": "Post-processing complete",
+  "assembling:starting": "Building sheet music...",
+  "assembling:building_score": "Assembling score...",
+  "assembling:musicxml_exported": "Score ready",
+  "assembling:complete": "Score ready",
 };
 
 export default function ProcessingStatus() {

@@ -35,3 +35,5 @@ class Session:
     quantized_notes: dict[str, list] = field(default_factory=dict)
     tempo: int = 120
     key_signature: str = "C"
+    musicxml_path: str = ""
+    score_json: dict | None = None

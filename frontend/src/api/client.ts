@@ -20,6 +20,10 @@ export interface SessionResponse {
   stage: string;
   error: string | null;
   stem_paths: Record<string, string> | null;
+  raw_notes: Record<string, unknown[]> | null;
+  tempo: number | null;
+  key_signature: string | null;
+  score_json: Record<string, unknown> | null;
 }
 
 export class ApiError extends Error {

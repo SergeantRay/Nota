@@ -102,6 +102,7 @@ async def _run_separation_task(session_id: str):
     from app.pipeline import run_separation, SeparationError
     from app.pipeline.pitch_detector import run_pitch_detection, DetectionError
     from app.pipeline.post_processor import run_post_processing, PostProcessingError
+    from app.pipeline.score_assembler import assemble_score, AssemblyError
 
     session = read_session(session_id)
     if session is None or session.original_path is None:
@@ -176,6 +177,31 @@ async def _run_separation_task(session_id: str):
             session.key_signature = pp_result.get("key_signature", "C")
             write_session(session)
 
+        # Step 4: Score assembly
+        on_progress(1.0, "assembling:starting")
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.ASSEMBLING
+            write_session(session)
+
+        asm_result = await asyncio.to_thread(
+            assemble_score,
+            session.quantized_notes,
+            session.tempo,
+            session.key_signature,
+            output_dir,
+            on_progress,
+        )
+
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.COMPLETE
+            session.progress = 1.0
+            session.stage = "assembling:complete"
+            session.musicxml_path = asm_result.get("musicxml_path", "")
+            session.score_json = asm_result.get("score_data")
+            write_session(session)
+
     except SeparationError as e:
         session = read_session(session_id)
         if session:
@@ -189,6 +215,12 @@ async def _run_separation_task(session_id: str):
             session.error = str(e)
             write_session(session)
     except PostProcessingError as e:
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.ERROR
+            session.error = str(e)
+            write_session(session)
+    except AssemblyError as e:
         session = read_session(session_id)
         if session:
             session.status = SessionStatus.ERROR
@@ -211,4 +243,5 @@ def _session_response(session: Session) -> dict:
         "raw_notes": session.raw_notes,
         "tempo": session.tempo,
         "key_signature": session.key_signature,
+        "score_json": session.score_json,
     }

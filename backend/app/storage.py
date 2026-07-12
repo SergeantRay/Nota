@@ -58,6 +58,8 @@ def _serialize(s: Session) -> dict:
         "quantized_notes": s.quantized_notes,
         "tempo": s.tempo,
         "key_signature": s.key_signature,
+        "musicxml_path": s.musicxml_path,
+        "score_json": s.score_json,
     }
 
 
@@ -79,4 +81,6 @@ def _deserialize(d: dict) -> Session:
         quantized_notes=d.get("quantized_notes", {}),
         tempo=d.get("tempo", 120),
         key_signature=d.get("key_signature", "C"),
+        musicxml_path=d.get("musicxml_path", ""),
+        score_json=d.get("score_json"),
     )
