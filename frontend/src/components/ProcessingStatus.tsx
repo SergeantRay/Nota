@@ -9,6 +9,13 @@ const STAGE_LABELS: Record<string, string> = {
   "separating:saving_stems": "Saving stems...",
   "separating:collecting_output": "Collecting output...",
   "separating:complete": "Separation complete",
+  "detecting:starting": "Starting pitch detection...",
+  "detecting:percussion": "Detecting percussion onsets...",
+  "detecting:bass": "Detecting bass notes...",
+  "detecting:other": "Detecting tenor/alto notes...",
+  "detecting:melody": "Detecting melody notes...",
+  "detecting:done": "Pitch detection complete",
+  "detecting:complete": "Pitch detection complete",
 };
 
 export default function ProcessingStatus() {
@@ -33,7 +40,7 @@ export default function ProcessingStatus() {
         />
       </div>
       {status === "complete" && (
-        <p className="mt-2 text-green-400">Separation complete. Ready for pitch detection.</p>
+        <p className="mt-2 text-green-400">Processing complete. Ready for next step.</p>
       )}
       {status === "error" && (
         <p className="mt-2 text-red-400">

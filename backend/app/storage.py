@@ -54,6 +54,7 @@ def _serialize(s: Session) -> dict:
         "stage": s.stage,
         "error": s.error,
         "stem_paths": s.stem_paths,
+        "raw_notes": s.raw_notes,
     }
 
 
@@ -71,4 +72,5 @@ def _deserialize(d: dict) -> Session:
         stage=d.get("stage", ""),
         error=d.get("error"),
         stem_paths=d.get("stem_paths", {}),
+        raw_notes=d.get("raw_notes", {}),
     )

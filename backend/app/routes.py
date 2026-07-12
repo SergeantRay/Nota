@@ -100,6 +100,7 @@ async def get_session_status(session_id: str):
 
 async def _run_separation_task(session_id: str):
     from app.pipeline import run_separation, SeparationError
+    from app.pipeline.pitch_detector import run_pitch_detection, DetectionError
 
     session = read_session(session_id)
     if session is None or session.original_path is None:
@@ -114,6 +115,8 @@ async def _run_separation_task(session_id: str):
 
     try:
         output_dir = ensure_session_dir(session_id)
+
+        # Step 1: Source separation
         stem_paths = await asyncio.to_thread(
             run_separation,
             str(session.original_path),
@@ -123,12 +126,38 @@ async def _run_separation_task(session_id: str):
 
         session = read_session(session_id)
         if session:
-            session.status = SessionStatus.COMPLETE
-            session.progress = 1.0
-            session.stage = "separating:complete"
             session.stem_paths = {k: str(v) for k, v in stem_paths.items()}
             write_session(session)
+
+        # Step 2: Pitch detection
+        on_progress(0.90, "detecting:starting")
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.DETECTING
+            write_session(session)
+
+        raw_notes = await asyncio.to_thread(
+            run_pitch_detection,
+            stem_paths,
+            output_dir,
+            on_progress,
+        )
+
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.COMPLETE
+            session.progress = 1.0
+            session.stage = "detecting:complete"
+            session.raw_notes = raw_notes
+            write_session(session)
+
     except SeparationError as e:
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.ERROR
+            session.error = str(e)
+            write_session(session)
+    except DetectionError as e:
         session = read_session(session_id)
         if session:
             session.status = SessionStatus.ERROR
@@ -148,4 +177,5 @@ def _session_response(session: Session) -> dict:
         "stage": session.stage,
         "error": session.error,
         "stem_paths": session.stem_paths,
+        "raw_notes": session.raw_notes,
     }
