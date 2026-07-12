@@ -32,3 +32,6 @@ class Session:
     error: str | None = None
     stem_paths: dict[str, str] = field(default_factory=dict)
     raw_notes: dict[str, list] = field(default_factory=dict)
+    quantized_notes: dict[str, list] = field(default_factory=dict)
+    tempo: int = 120
+    key_signature: str = "C"

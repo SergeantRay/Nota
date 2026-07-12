@@ -101,6 +101,7 @@ async def get_session_status(session_id: str):
 async def _run_separation_task(session_id: str):
     from app.pipeline import run_separation, SeparationError
     from app.pipeline.pitch_detector import run_pitch_detection, DetectionError
+    from app.pipeline.post_processor import run_post_processing, PostProcessingError
 
     session = read_session(session_id)
     if session is None or session.original_path is None:
@@ -151,6 +152,30 @@ async def _run_separation_task(session_id: str):
             session.raw_notes = raw_notes
             write_session(session)
 
+        # Step 3: Post-processing
+        on_progress(0.995, "postprocessing:starting")
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.POSTPROCESSING
+            write_session(session)
+
+        pp_result = await asyncio.to_thread(
+            run_post_processing,
+            raw_notes,
+            output_dir,
+            on_progress,
+        )
+
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.COMPLETE
+            session.progress = 1.0
+            session.stage = "postprocessing:complete"
+            session.quantized_notes = pp_result.get("quantized_notes", {})
+            session.tempo = pp_result.get("tempo", 120)
+            session.key_signature = pp_result.get("key_signature", "C")
+            write_session(session)
+
     except SeparationError as e:
         session = read_session(session_id)
         if session:
@@ -158,6 +183,12 @@ async def _run_separation_task(session_id: str):
             session.error = str(e)
             write_session(session)
     except DetectionError as e:
+        session = read_session(session_id)
+        if session:
+            session.status = SessionStatus.ERROR
+            session.error = str(e)
+            write_session(session)
+    except PostProcessingError as e:
         session = read_session(session_id)
         if session:
             session.status = SessionStatus.ERROR
@@ -178,4 +209,6 @@ def _session_response(session: Session) -> dict:
         "error": session.error,
         "stem_paths": session.stem_paths,
         "raw_notes": session.raw_notes,
+        "tempo": session.tempo,
+        "key_signature": session.key_signature,
     }

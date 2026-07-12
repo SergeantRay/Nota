@@ -55,6 +55,9 @@ def _serialize(s: Session) -> dict:
         "error": s.error,
         "stem_paths": s.stem_paths,
         "raw_notes": s.raw_notes,
+        "quantized_notes": s.quantized_notes,
+        "tempo": s.tempo,
+        "key_signature": s.key_signature,
     }
 
 
@@ -73,4 +76,7 @@ def _deserialize(d: dict) -> Session:
         error=d.get("error"),
         stem_paths=d.get("stem_paths", {}),
         raw_notes=d.get("raw_notes", {}),
+        quantized_notes=d.get("quantized_notes", {}),
+        tempo=d.get("tempo", 120),
+        key_signature=d.get("key_signature", "C"),
     )

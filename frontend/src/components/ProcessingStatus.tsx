@@ -16,6 +16,12 @@ const STAGE_LABELS: Record<string, string> = {
   "detecting:melody": "Detecting melody notes...",
   "detecting:done": "Pitch detection complete",
   "detecting:complete": "Pitch detection complete",
+  "postprocessing:starting": "Analyzing tempo and key...",
+  "postprocessing:tempo_detected": "Tempo detected",
+  "postprocessing:key_detected": "Key signature detected",
+  "postprocessing:quantized": "Quantizing notes...",
+  "postprocessing:voices_separated": "Separating voices...",
+  "postprocessing:complete": "Post-processing complete",
 };
 
 export default function ProcessingStatus() {
