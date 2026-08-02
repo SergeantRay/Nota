@@ -72,6 +72,9 @@ export interface SessionState {
   reset: () => void;
   startPolling: () => void;
   stopPolling: () => void;
+  isPlaying: boolean;
+  playbackPosition: number;
+  setPlaybackState: (state: { playing: boolean; position: number; duration: number }) => void;
 }
 
 let _pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -98,6 +101,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   scoreData: null,
   layers: defaultLayers(),
   tempo: 120,
+  isPlaying: false,
+  playbackPosition: 0,
 
   setSession: (data) =>
     set({
@@ -163,6 +168,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       scoreData: null,
       layers: defaultLayers(),
       tempo: 120,
+      isPlaying: false,
+      playbackPosition: 0,
     });
   },
 
@@ -206,4 +213,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
     set({ isProcessing: false });
   },
+
+  setPlaybackState: (s) =>
+    set({ isPlaying: s.playing, playbackPosition: s.position }),
 }));
