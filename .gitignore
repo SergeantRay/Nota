@@ -45,3 +45,11 @@ sessions/
 .pytest_cache/
 coverage/
 htmlcov/
+
+# Claude Code
+.claude/
+
+# Requirements lockfiles are fine, but not poetry/pipenv metadata
+Pipfile
+Pipfile.lock
+poetry.lock
