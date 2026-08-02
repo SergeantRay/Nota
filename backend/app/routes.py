@@ -228,6 +228,22 @@ async def _run_separation_task(session_id: str):
             write_session(session)
 
 
+@router.get("/session/{session_id}/score")
+async def get_session_score(session_id: str):
+    session = read_session(session_id)
+    if session is None:
+        raise HTTPException(404, "Session not found")
+    if session.score_json is None:
+        raise HTTPException(404, "Score not yet assembled")
+    return {
+        "session_id": session.id,
+        "tempo": session.tempo,
+        "key_signature": session.key_signature,
+        "score_json": session.score_json,
+        "raw_notes": session.raw_notes,
+    }
+
+
 def _session_response(session: Session) -> dict:
     return {
         "session_id": session.id,
@@ -240,8 +256,6 @@ def _session_response(session: Session) -> dict:
         "stage": session.stage,
         "error": session.error,
         "stem_paths": session.stem_paths,
-        "raw_notes": session.raw_notes,
         "tempo": session.tempo,
         "key_signature": session.key_signature,
-        "score_json": session.score_json,
     }

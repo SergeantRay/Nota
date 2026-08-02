@@ -25,15 +25,14 @@ def fake_audio(tmp_path):
 
 class TestSeparationLogic:
     def test_layer_mapping(self):
-        from app.pipeline import STEM_TO_LAYER, COMBINED_STEMS, DEMUCS_STEMS
+        from app.pipeline import STEM_TO_LAYER, DEMUCS_STEMS
 
-        mapped = set(STEM_TO_LAYER) | set(COMBINED_STEMS)
+        mapped = set(STEM_TO_LAYER) | {"other"}
         assert mapped == set(DEMUCS_STEMS)
 
         assert STEM_TO_LAYER["drums"] == "percussion"
         assert STEM_TO_LAYER["bass"] == "bass"
         assert STEM_TO_LAYER["vocals"] == "melody"
-        assert set(COMBINED_STEMS) == {"piano", "guitar", "other"}
 
     def test_detect_device(self):
         from app.pipeline import _detect_device
@@ -57,14 +56,14 @@ class TestSeparationWithMocks:
         stems_dir = tmp_path / "stems"
         stems_dir.mkdir()
 
-        # Create fake stem WAVs as Demucs would
+        # Create fake stem WAVs as Demucs would (4-source model)
         wav = torch.zeros(2, 44100)
-        for name in ["drums", "bass", "piano", "guitar", "vocals", "other"]:
+        for name in ["drums", "bass", "other", "vocals"]:
             torchaudio.save(str(stems_dir / f"{name}.wav"), wav, 44100)
 
         from app.pipeline import _save_stems
 
-        sources = torch.zeros(6, 2, 44100)
+        sources = torch.zeros(4, 2, 44100)
         result = _save_stems(sources, 44100, stems_dir)
 
         assert set(result.keys()) == {"percussion", "bass", "melody", "other"}
@@ -72,17 +71,20 @@ class TestSeparationWithMocks:
             assert result[layer].exists()
 
     def test_combine_other_stems(self, tmp_path):
-        import torch
-        import torchaudio
-
         stems_dir = tmp_path / "stems"
         stems_dir.mkdir()
 
         sr = 44100
-        # Use amplitude < 1/3 so sum stays < 1.0 (int16 WAV clips at ±1.0)
-        for name in ["piano", "guitar", "other"]:
-            wav = torch.full((2, sr), 0.3)
-            torchaudio.save(str(stems_dir / f"{name}.wav"), wav, sr)
+        import wave
+        import struct
+        p = stems_dir / "other.wav"
+        n = sr  # 1 second
+        with wave.open(str(p), "w") as wav_file:
+            wav_file.setnchannels(1)
+            wav_file.setsampwidth(2)
+            wav_file.setframerate(sr)
+            for _ in range(n):
+                wav_file.writeframes(struct.pack("<h", 16000))
 
         out_dir = tmp_path / "output"
         out_dir.mkdir()
@@ -92,10 +94,7 @@ class TestSeparationWithMocks:
         result = _combine_other_stems(stems_dir, out_dir)
         assert result is not None
         assert result.exists()
-
-        combined, _ = torchaudio.load(str(result))
-        val = float(combined.abs().max())
-        assert abs(val - 0.9) < 0.1, f"Expected ~0.9, got {val}"
+        assert result.name == "other.wav"
 
 
 class TestSeparationError:

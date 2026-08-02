@@ -20,10 +20,15 @@ export interface SessionResponse {
   stage: string;
   error: string | null;
   stem_paths: Record<string, string> | null;
-  raw_notes: Record<string, unknown[]> | null;
   tempo: number | null;
   key_signature: string | null;
-  score_json: Record<string, unknown> | null;
+}
+
+export interface ScoreResponse {
+  session_id: string;
+  tempo: number;
+  key_signature: string;
+  score_json: Record<string, unknown>;
 }
 
 export class ApiError extends Error {
@@ -87,4 +92,8 @@ export function startProcessing(sessionId: string) {
     `/api/session/${sessionId}/process`,
     { method: "POST" },
   );
+}
+
+export function getScore(sessionId: string) {
+  return request<ScoreResponse>(`/api/session/${sessionId}/score`);
 }

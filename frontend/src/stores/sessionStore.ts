@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getSession, startProcessing } from "../api/client";
+import { getSession, getScore, startProcessing } from "../api/client";
 
 export type SessionStatus =
   | "uploaded"
@@ -191,11 +191,24 @@ export const useSessionStore = create<SessionState>((set, get) => ({
           isProcessing:
             data.status !== "complete" && data.status !== "error",
         });
+        if (data.tempo) {
+          set({ tempo: data.tempo });
+        }
         if (data.status === "complete" || data.status === "error") {
           get().stopPolling();
-        }
-        if (data.score_json) {
-          set({ scoreData: data.score_json as unknown as ScoreData, tempo: (data.score_json as Record<string, unknown>).tempo as number ?? 120 });
+          if (data.status === "complete") {
+            try {
+              const score = await getScore(id);
+              if (score.score_json) {
+                set({
+                  scoreData: score.score_json as unknown as ScoreData,
+                  tempo: score.tempo ?? 120,
+                });
+              }
+            } catch {
+              // score may not be ready
+            }
+          }
         }
       } catch {
         // backend may be temporarily unavailable; keep polling

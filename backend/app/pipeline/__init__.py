@@ -8,8 +8,8 @@ from typing import Callable
 
 from app.config import settings
 
-# Demucs 6-source model stem names in order
-DEMUCS_STEMS = ["drums", "bass", "piano", "guitar", "vocals", "other"]
+# Demucs 4-source model stem names (default htdemucs)
+DEMUCS_STEMS = ["drums", "bass", "other", "vocals"]
 
 # Map Demucs stems to our layers
 STEM_TO_LAYER: dict[str, str] = {
@@ -18,8 +18,8 @@ STEM_TO_LAYER: dict[str, str] = {
     "vocals": "melody",
 }
 
-# Stems that get combined into the "other" layer
-COMBINED_STEMS = ["piano", "guitar", "other"]
+# The "other" stem from Demucs maps directly to our "other" layer
+# (htdemucs 4-source model combines piano/guitar/other into a single "other" stem)
 
 
 class SeparationError(Exception):
@@ -173,7 +173,6 @@ def _save_stems(sources, sr: int, stems_dir: Path) -> dict[str, Path]:
     import torchaudio
 
     layer_paths: dict[str, Path] = {}
-    combined_wavs: list = []
 
     for i, stem_name in enumerate(DEMUCS_STEMS):
         source = sources[i].cpu()
@@ -182,39 +181,23 @@ def _save_stems(sources, sr: int, stems_dir: Path) -> dict[str, Path]:
             dest = stems_dir / f"{layer}.wav"
             torchaudio.save(str(dest), source, sr)
             layer_paths[layer] = dest
-        elif stem_name in COMBINED_STEMS:
-            combined_wavs.append(source)
-
-    if combined_wavs:
-        combined = torch.stack(combined_wavs).sum(dim=0)
-        dest = stems_dir / "other.wav"
-        torchaudio.save(str(dest), combined, sr)
-        layer_paths["other"] = dest
+        elif stem_name == "other":
+            dest = stems_dir / "other.wav"
+            torchaudio.save(str(dest), source, sr)
+            layer_paths["other"] = dest
 
     return layer_paths
 
 
 def _combine_other_stems(demucs_out: Path, stems_dir: Path) -> Path | None:
-    """Sum piano + guitar + other stems into a single 'other' WAV."""
-    import torchaudio
+    """Copy the 'other' stem directly to our output (4-source model already combines them)."""
+    import shutil
 
-    combined = None
-    dest = stems_dir / "other.wav"
-
-    for stem_name in COMBINED_STEMS:
-        stem_path = demucs_out / f"{stem_name}.wav"
-        if not stem_path.exists():
-            continue
-        wav, sr = torchaudio.load(str(stem_path))
-        if combined is None:
-            combined = wav
-        else:
-            combined += wav
-
-    if combined is not None:
-        torchaudio.save(str(dest), combined, sr)
+    stem_path = demucs_out / "other.wav"
+    if stem_path.exists():
+        dest = stems_dir / "other.wav"
+        shutil.copy2(stem_path, dest)
         return dest
-
     return None
 
 
