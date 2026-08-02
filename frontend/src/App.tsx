@@ -1,38 +1,44 @@
 import UploadZone from "./components/UploadZone";
 import ProcessingStatus from "./components/ProcessingStatus";
+import LayerControls from "./components/LayerControls";
+import PlaybackControls from "./components/PlaybackControls";
+import ScorePlaceholder from "./components/ScorePlaceholder";
+import { useSessionStore } from "./stores/sessionStore";
 
 export default function App() {
+  const isComplete = useSessionStore((s) => s.status === "complete");
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <header className="border-b border-gray-800 px-6 py-4">
-        <h1 className="text-2xl font-bold tracking-tight text-white">Nota</h1>
-        <p className="text-sm text-gray-500">Audio to sheet music</p>
+      <header className="flex items-center justify-between border-b border-gray-800 px-6 py-3">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-white">Nota</h1>
+          <p className="text-xs text-gray-500">Audio to sheet music</p>
+        </div>
+        {isComplete && (
+          <button
+            onClick={() => useSessionStore.getState().reset()}
+            className="rounded border border-gray-700 px-3 py-1 text-xs text-gray-400 hover:bg-gray-800 transition"
+          >
+            New Upload
+          </button>
+        )}
       </header>
 
-      <main className="mx-auto max-w-3xl space-y-6 p-6">
-        <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Upload
-          </h2>
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-56 shrink-0 border-r border-gray-800 p-4 space-y-6 min-h-[calc(100vh-53px)]">
           <UploadZone />
-        </section>
-
-        <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Processing
-          </h2>
           <ProcessingStatus />
-        </section>
+          <LayerControls />
+          <PlaybackControls />
+        </aside>
 
-        <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Score
-          </h2>
-          <div className="rounded-lg border border-dashed border-gray-800 p-8 text-center text-sm text-gray-600">
-            Score will appear here after processing
-          </div>
-        </section>
-      </main>
+        {/* Main score area */}
+        <main className="flex-1 p-6 overflow-auto">
+          <ScorePlaceholder />
+        </main>
+      </div>
     </div>
   );
 }
