@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nota-backend",
+      "runtimeExecutable": "uvicorn",
+      "runtimeArgs": ["app.main:app", "--port", "8000", "--reload"],
+      "port": 8000,
+      "cwd": "/Users/celinezl/NOVA-Ver2/backend"
+    },
+    {
+      "name": "nota-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173,
+      "cwd": "/Users/celinezl/NOVA-Ver2/frontend"
+    }
+  ]
+}
