@@ -2,7 +2,7 @@ import UploadZone from "./components/UploadZone";
 import ProcessingStatus from "./components/ProcessingStatus";
 import LayerControls from "./components/LayerControls";
 import PlaybackControls from "./components/PlaybackControls";
-import ScorePlaceholder from "./components/ScorePlaceholder";
+import ScoreCanvas from "./components/ScoreCanvas";
 import { useSessionStore } from "./stores/sessionStore";
 
 export default function App() {
@@ -36,7 +36,7 @@ export default function App() {
 
         {/* Main score area */}
         <main className="flex-1 p-6 overflow-auto">
-          <ScorePlaceholder />
+          <ScoreCanvas />
         </main>
       </div>
     </div>
